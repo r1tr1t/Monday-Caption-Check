@@ -29,8 +29,8 @@ async function getYouTubeChannelDetails(req, res) {
 
       if(checkStatus === "Get Details"){
         const channelName = await captionServices.getYouTubeChannelName(videoId);
-        const captionType = await captionServices.getYoutubeCaptionedType(videoId);
-        const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
+        const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
+        // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
 
         console.log(channelName + "----" + captionType + "------" + captionStatus + "-----")
         await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);  

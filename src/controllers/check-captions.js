@@ -6,7 +6,7 @@ var base_url = process.env.BASE_URL;
 var accessToken = process.env.CANVAS_ACCESS_TOKEN;
 var youtubeAPIKey = process.env.YOUTUBE_API_KEY;
 var kalturaAPIKey = process.env.KALTURA_API_KEY;
-var apiKeys = process.env.YOUTUBE_API_KEYS.split(',');
+var apiKeys = [process.env.YOUTUBE_API_KEY];
 console.log(apiKeys);
 
 function getNextPageUrl(linkHeader) {
@@ -579,15 +579,15 @@ async function getYouTubeChannelName(videoId) {
         return channel.snippet.title;
       } else {
         console.error("Channel not found.");
-        return null;
+        return "";
       }
     } else {
       console.error("Video not found.");
-      return null;
+      return "";
     }
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
-    return null;
+    return "";
   }
 }
 
@@ -616,6 +616,47 @@ async function checkYoutubeCaptionedOrNot(videoId) {
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
     return false;
+  }
+}
+
+
+async function getYoutubeCaptionDetails(videoId) {
+
+  const youtubeAPIKey = await checkQuotaExceeded(videoId);
+
+  console.log("---- Started checking video is captioned or not ----" + youtubeAPIKey);
+
+  try {
+
+    var youtube = google.youtube({
+      version: 'v3',
+      auth: youtubeAPIKey,
+    });
+
+    const response = await youtube.captions.list({
+      part: 'snippet',
+      videoId: videoId,
+    });
+
+    const captions = response.data.items || [];
+
+    console.log("---- Finished checking video is captioned or not ----");
+
+    if (captions.length === 0) {
+      return [captions.length > 0, 'No Caption'];
+    }
+
+    let captionType = '';
+    for (const caption of captions) {
+      captionType += caption.snippet.trackKind;
+      captionType += ', ';
+    }
+
+    console.log("---- Finished checking video type ----");
+    return [captions.length > 0, captionType.slice(0, -2)];
+  } catch (error) {
+    console.error(`An error occurred: ${error.message}`);
+    return [false, 'No Caption'];
   }
 }
 
@@ -774,6 +815,7 @@ module.exports = {
     addCategories,
     getYouTubeChannelName,
     checkYoutubeCaptionedOrNot,
-    getYoutubeCaptionedType
+    getYoutubeCaptionedType,
+    getYoutubeCaptionDetails
 };
   
