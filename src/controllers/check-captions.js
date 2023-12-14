@@ -6,7 +6,7 @@ var base_url = process.env.BASE_URL;
 var accessToken = process.env.CANVAS_ACCESS_TOKEN;
 var youtubeAPIKey = process.env.YOUTUBE_API_KEY;
 var kalturaAPIKey = process.env.KALTURA_API_KEY;
-var apiKeys = [process.env.YOUTUBE_API_KEY];
+var apiKeys = process.env.YOUTUBE_API_KEYS.split(',');
 console.log(apiKeys);
 
 function getNextPageUrl(linkHeader) {
@@ -652,8 +652,22 @@ async function getYoutubeCaptionDetails(videoId) {
       captionType += ', ';
     }
 
+    console.log(captionType);
+
+    var captionedStatus = captions.length > 0;
+    captionType = captionType.slice(0, -2)
+
+    if(captionType.includes('standard')){
+        captionType = "standard"
+        captionedStatus = true;
+    }
+    else if(!(captionType === "No Caption")){
+      captionedStatus = false;
+      captionType = "esr";
+    }
+
     console.log("---- Finished checking video type ----");
-    return [captions.length > 0, captionType.slice(0, -2)];
+    return [captionedStatus, captionType];
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
     return [false, 'No Caption'];

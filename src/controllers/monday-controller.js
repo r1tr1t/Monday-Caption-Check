@@ -37,16 +37,16 @@ async function getYouTubeChannelDetails(req, res) {
       }
       else if(checkStatus === "Get All Details"){
         var boardRows = await mondayService.getAllRows(shortLivedToken, boardId);
+        console.log(boardRows.length);
         for(var idx = 0; idx < boardRows.length; idx++){
             const videoId = boardRows[idx].column_values.find(item => item.id === sourceColumnId).text;
             const itemId = boardRows[idx].id;
             console.log(videoId);
             console.log(itemId);
-            const channelName = await captionServices.getYouTubeChannelName(videoId);
-            const captionType = await captionServices.getYoutubeCaptionedType(videoId);
-            const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
-      
-            await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);      
+            // const channelName = await captionServices.getYouTubeChannelName(videoId);
+            // const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
+            // // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
+            // await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);
         }
       }
   
