@@ -3,12 +3,7 @@ const transformationService = require('../services/transformation-service');
 const { TRANSFORMATION_TYPES } = require('../constants/transformation');
 const captionServices = require('./check-captions');
 
-let boardID;
-let rowID;
-let columnID;
 let subitemParams = {};
-let statusValue;
-let kalturaId;
 
 const shortLivedToken  = process.env.MONDAY_API_KEY;
 
@@ -38,7 +33,10 @@ async function getYouTubeChannelDetails(req, res) {
       else if(checkStatus === "Get All Details"){
         var boardRows = await mondayService.getAllRows(shortLivedToken, boardId);
         console.log(boardRows.length);
-        for(var idx = 0; idx < boardRows.length; idx++){
+        const index = boardRows.findIndex(row => row.id == itemId);
+        console.log(index);
+        console.log(((index + 200) > boardRows.length ? index + (boardRows.length - index) : index + 200));
+        for(var idx = index; idx < ((index + 200) > boardRows.length ? index + (boardRows.length - index) : index + 200); idx++){
             const videoId = boardRows[idx].column_values.find(item => item.id === sourceColumnId).text;
             const itemId = boardRows[idx].id;
             console.log(videoId);
