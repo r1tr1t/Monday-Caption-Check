@@ -42,8 +42,8 @@ async function getYouTubeChannelDetails(req, res) {
         console.log(boardRows.length);
         const index = boardRows.findIndex(row => row.id == itemId);
         console.log(index);
-        console.log(((index + 400) > boardRows.length ? index + (boardRows.length - index) : index + 400));
-        for(var idx = index; idx < ((index + 400) > boardRows.length ? index + (boardRows.length - index) : index + 400); idx++){
+        console.log(((index + 500) > boardRows.length ? index + (boardRows.length - index) : index + 500));
+        for(var idx = index; idx < ((index + 500) > boardRows.length ? index + (boardRows.length - index) : index + 500); idx++){
             const videoId = boardRows[idx].column_values.find(item => item.id === sourceColumnId).text;
             const itemId = boardRows[idx].id;
             console.log(videoId);
