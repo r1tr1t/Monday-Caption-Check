@@ -7,6 +7,13 @@ let subitemParams = {};
 
 const shortLivedToken  = process.env.MONDAY_API_KEY;
 
+async function updateMondayDataTemp(videoId, ...args){
+    const channelName = await captionServices.getYouTubeChannelName(videoId);
+    const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
+    // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
+    console.log(args);
+    await mondayService.updateMondayColumn(...args, [captionStatus ? "True":"False", channelName, captionType]);
+}
 
 async function getYouTubeChannelDetails(req, res) {
     const { payload } = req.body;
@@ -41,10 +48,11 @@ async function getYouTubeChannelDetails(req, res) {
             const itemId = boardRows[idx].id;
             console.log(videoId);
             console.log(itemId);
-            const channelName = await captionServices.getYouTubeChannelName(videoId);
-            const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
-            // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
-            await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);
+            // const channelName = await captionServices.getYouTubeChannelName(videoId);
+            // const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
+            // // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
+            // await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);
+            updateMondayDataTemp(videoId, shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId])
         }
       }
   
