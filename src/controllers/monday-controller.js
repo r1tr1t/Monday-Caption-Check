@@ -43,10 +43,10 @@ async function getYouTubeChannelDetails(req, res) {
             const itemId = boardRows[idx].id;
             console.log(videoId);
             console.log(itemId);
-            // const channelName = await captionServices.getYouTubeChannelName(videoId);
-            // const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
-            // // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
-            // await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);
+            const channelName = await captionServices.getYouTubeChannelName(videoId);
+            const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
+            // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
+            await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);
         }
       }
   
@@ -59,52 +59,52 @@ async function getYouTubeChannelDetails(req, res) {
 
 
 async function executeAction(req, res) {
-  const { payload } = req.body;
+    const { payload } = req.body;
 
-  try {
-    const { inputFields } = payload;
-    const { boardId, itemId, sourceColumnId, targetColumnId, transformationType } = inputFields;
-    console.log(payload);
+    try {
+        const { inputFields } = payload;
+        const { boardId, itemId, sourceColumnId, targetColumnId, transformationType } = inputFields;
+        console.log(payload);
 
-    const categoryId = await mondayService.getColumnValue(shortLivedToken, itemId, sourceColumnId);
-    const entryId = await mondayService.getRowName(shortLivedToken, itemId);
+        const categoryId = await mondayService.getColumnValue(shortLivedToken, itemId, sourceColumnId);
+        const entryId = await mondayService.getRowName(shortLivedToken, itemId);
 
-    console.log(entryId);
-    console.log(categoryId);
+        console.log(entryId);
+        console.log(categoryId);
 
-    if(categoryId !== null){
-        const response = await captionServices.addCategories(entryId, categoryId);
-        console.log(response);
+        if(categoryId !== null){
+            const response = await captionServices.addCategories(entryId, categoryId);
+            console.log(response);
+        }
+
+        return res.status(200).send({});
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send({ message: 'internal server error' });
     }
-
-    return res.status(200).send({});
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send({ message: 'internal server error' });
-  }
 }
 
 
 async function checkCaption(req, res) {
-  const { payload } = req.body;
-  console.log("hello");
-  console.log(payload);
-  console.log(shortLivedToken);
+    const { payload } = req.body;
+    console.log("hello");
+    console.log(payload);
+    console.log(shortLivedToken);
 
-  try {
-    const { inputFields } = payload;
-    const { boardId, columnId, itemId, sourceColumnId } = inputFields;
+    try {
+        const { inputFields } = payload;
+        const { boardId, columnId, itemId, sourceColumnId } = inputFields;
 
-    const status = await mondayService.getColumnValue(shortLivedToken, itemId, sourceColumnId);
+        const status = await mondayService.getColumnValue(shortLivedToken, itemId, sourceColumnId);
 
-    if(status === "Begin Check"){
-      return getMethodHandler(inputFields);
+        if(status === "Begin Check"){
+        return getMethodHandler(inputFields);
+        }
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send({ message: 'internal server error' });
     }
-
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send({ message: 'internal server error' });
-  }
 }
 
 
@@ -336,12 +336,12 @@ async function getMethodHandler(req) {
 
 
 async function getRemoteListOptions(req, res) {
-  try {
-    return res.status(200).send(TRANSFORMATION_TYPES);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send({ message: 'internal server error' });
-  }
+    try {
+        return res.status(200).send(TRANSFORMATION_TYPES);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send({ message: 'internal server error' });
+    }
 }
 
 module.exports = {
