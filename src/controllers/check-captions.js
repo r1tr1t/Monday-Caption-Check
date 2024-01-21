@@ -869,7 +869,7 @@ async function getYoutubeCaptionDetails(videoId) {
     }
     else if(!(captionType === "No Caption")){
       captionedStatus = false;
-      captionType = "esr";
+      captionType = "ASR";
     }
 
     console.log("---- Finished checking video type ----");
@@ -996,7 +996,7 @@ async function getAllUrls(allUrls) {
                 captionedStatus = true;
               } else if (captionType !== 'No Caption') {
                 captionedStatus = false;
-                captionType = 'esr';
+                captionType = 'ASR';
               }
           } else if (key === 'Video' || key === 'Audio') {
               captionedStatus = null;
