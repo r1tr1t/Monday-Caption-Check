@@ -9,6 +9,19 @@ var kalturaAPIKey = process.env.KALTURA_API_KEY;
 var apiKeys = process.env.YOUTUBE_API_KEYS.split(',');
 console.log(apiKeys);
 
+function convertSecondstoTime(seconds){
+  var hours = Math.floor(seconds / 3600);
+  var minutes = Math.floor((seconds % 3600) / 60);
+  var remainingSeconds = seconds % 60;
+
+  // Add leading zero if single digit
+  hours = hours < 10 ? '0' + hours : hours;
+  minutes = minutes < 10 ? '0' + minutes : minutes;
+  remainingSeconds = remainingSeconds < 10 ? '0' + remainingSeconds : remainingSeconds;
+
+  return hours + ':' + minutes + ':' + remainingSeconds;
+}
+
 function getNextPageUrl(linkHeader) {
   try {
     console.log("---- changing to next page ----")
@@ -675,6 +688,42 @@ async function getKalturaPlaylistVideos(id){
   }
 }
 
+async function getKalturaVideoDuration(id){
+  try {
+    console.log(id)
+    const startSessionParams = {
+      secret: kalturaAPIKey,
+      partnerId: 1530551,
+      privileges: '',
+      type: 2,
+      userId: 'captions@usu.edu',
+      format: 1,
+    };
+
+    console.log("---- Getting playlist videos----");
+
+    const startSessionUrl = 'https://www.kaltura.com/api_v3/service/session/action/start';
+    const startSessionResponse = await axios.get(startSessionUrl, { params: startSessionParams });
+    const ks = startSessionResponse.data;
+
+    const getVideoDuration = {
+      ks: ks,
+      partnerId: 1530551,
+      format: 1,
+      entryId: id
+    };
+
+    const videoDurationURL = 'https://www.kaltura.com/api_v3/service/media/action/get';
+    const videoDurationResponse = await axios.post(videoDurationURL, getVideoDuration);
+    return convertSecondstoTime(videoDurationResponse.data.duration);
+  }
+  catch(err){
+    console.log(err)
+  }
+}
+
+
+
 async function checkQuotaExceeded(videoId){
   try {
     console.log("---- Checking the quota of API keys ----");
@@ -927,32 +976,37 @@ async function getAllUrls(allUrls) {
       for (const [key, value] of Object.entries(allUrls[title].entry_id)) {
         for (const entryId of value) {
           let captionedStatus, captionType;
+          let duration = '00:00:00'
           
           if (key === 'Kaltura') {
-            console.log(entryId);
-            captionedStatus = await checkCaptionedOrNot(entryId);
-            captionType = await getCaptionedType(entryId);
-            console.log(captionedStatus);
-            console.log(captionType);
+              console.log(entryId);
+              captionedStatus = await checkCaptionedOrNot(entryId);
+              captionType = await getCaptionedType(entryId);
+              duration = await getKalturaVideoDuration(entryId)
+
+              console.log(duration)
+              console.log(captionedStatus);
+              console.log(captionType);
           } else if (key === 'YouTube') {
-            captionedStatus = await checkYoutubeCaptionedOrNot(entryId);
-            captionType = await getYoutubeCaptionedType(entryId);
-  
-            if (captionType.includes('standard')) {
-              captionType = 'standard';
-              captionedStatus = true;
-            } else if (captionType !== 'No Caption') {
-              captionedStatus = false;
-              captionType = 'esr';
-            }
+              captionedStatus = await checkYoutubeCaptionedOrNot(entryId);
+              captionType = await getYoutubeCaptionedType(entryId);
+    
+              if (captionType.includes('standard')) {
+                captionType = 'standard';
+                captionedStatus = true;
+              } else if (captionType !== 'No Caption') {
+                captionedStatus = false;
+                captionType = 'esr';
+              }
           } else if (key === 'Video' || key === 'Audio') {
-            captionedStatus = null;
-            captionType = null;
+              captionedStatus = null;
+              captionType = null;
           }
   
-          captions[entryId] = [captionedStatus, key, captionType];
+          captions[entryId] = [captionedStatus, key, captionType, duration];
         }
       }
+
       allUrls[title].entry_id = captions;
     }
 
@@ -985,7 +1039,8 @@ async function getCaptionedVideos(courseId) {
     result.push(await getAllUrls(allUrlsAssignment));
     result.push(await getAllUrls(allUrlsDiscussion));
     result.push(await getAllUrls(allUrlsQuizzes));
-  
+
+    console.log(result)
     return result;
   }
   catch(err){

@@ -130,7 +130,7 @@ async function getBoardData(req, method) {
 
         const schemaResponse =  await mondayService.getTableSchema(shortLivedToken, boardId);
         const tableSchema = schemaResponse.data.boards[0].columns;
-        
+        console.log(tableSchema)
         if (method !== "categories") {
             for (const schema of tableSchema) {
                 switch (schema.title) {
@@ -174,6 +174,9 @@ async function getBoardData(req, method) {
                                     break;
                                 case "3Play":
                                     subitemParams["3play"] = subitem_column.id;
+                                    break;
+                                case "Duration":
+                                    subitemParams.duration = subitem_column.id;
                                     break;
                             }
                         }
@@ -267,7 +270,6 @@ async function getMethodHandler(req) {
 
         await mondayService.changeColumnValue(shortLivedToken, boardId, itemId, columnId, total_kaltura_videos.toString());
 
-
         for (const [key, value] of Object.entries(result[0])) {
             for (const [entry_ids, details] of Object.entries(value.entry_id)) {
                 const sub_item_column_value = {
@@ -279,7 +281,9 @@ async function getMethodHandler(req) {
                     [subitemParams.captioned]: details[0] ? "True" : "False",
                     [subitemParams.published]: value.published ? "True" : "False",
                     [subitemParams.video_type]: details[1],
-                    [subitemParams.caption_type]: details[2]
+                    [subitemParams.caption_type]: details[2],
+                    [subitemParams.caption_type]: details[2],
+                    [subitemParams.duration]: details[3]
                 };
 
                 await mondayService.createOrUpdateSubitem(shortLivedToken, itemId, entry_ids, sub_item_column_value);
@@ -297,7 +301,8 @@ async function getMethodHandler(req) {
                     [subitemParams.captioned]: details[0] ? "True" : "False",
                     [subitemParams.published]: value.published ? "True" : "False",
                     [subitemParams.video_type]: details[1],
-                    [subitemParams.caption_type]: details[2]
+                    [subitemParams.caption_type]: details[2],
+                    [subitemParams.duration]: details[3]
                 };
 
                 await mondayService.createOrUpdateSubitem(shortLivedToken, itemId, entry_ids, sub_item_column_value);
@@ -315,7 +320,8 @@ async function getMethodHandler(req) {
                     [subitemParams.captioned]: details[0] ? "True" : "False",
                     [subitemParams.published]: value.published ? "True" : "False",
                     [subitemParams.video_type]: details[1],
-                    [subitemParams.caption_type]: details[2]
+                    [subitemParams.caption_type]: details[2],
+                    [subitemParams.duration]: details[3]
                 };
 
                 await mondayService.createOrUpdateSubitem(shortLivedToken, itemId, entry_ids, sub_item_column_value);
@@ -333,7 +339,8 @@ async function getMethodHandler(req) {
                     [subitemParams.captioned]: details[0] ? "True" : "False",
                     [subitemParams.published]: value.published ? "True" : "False",
                     [subitemParams.video_type]: details[1],
-                    [subitemParams.caption_type]: details[2]
+                    [subitemParams.caption_type]: details[2],
+                    [subitemParams.duration]: details[3]
                 };
 
                 await mondayService.createOrUpdateSubitem(shortLivedToken, itemId, entry_ids, sub_item_column_value);
