@@ -5,8 +5,8 @@ const getAllRows = async (token, boardId) =>{
     const mondayClient = initMondayClient();
     mondayClient.setToken(token);
 
-    const query = `query($boardId: [Int]) {
-      boards(ids:$boardId) {
+    const query = `query {
+      boards(ids:${boardId}) {
         items {
           id
           name
@@ -34,18 +34,21 @@ const getColumnValue = async (token, itemId, columnId) => {
     const mondayClient = initMondayClient();
     mondayClient.setToken(token);
 
-    const query = `query($itemId: [Int], $columnId: [String]) {
-        items (ids: $itemId) {
+    const query = `query {
+        items (ids: ${itemId}) {
           name
-          column_values(ids:$columnId) {
+          column_values(ids:"${columnId}") {
             text
           }
         }
       }`;
 
-    const variables = { columnId, itemId };
+    const variables = { itemId, columnId};
+
 
     const response = await mondayClient.api(query, { variables });
+    console.log(query);
+    console.log(response);
     return response.data.items[0].column_values[0].text; 
   } catch (err) {
     console.error(err);
@@ -58,8 +61,8 @@ const getRowName = async (token, itemId) => {
     const mondayClient = initMondayClient();
     mondayClient.setToken(token);
 
-    const query = `query($itemId: [Int]) {
-        items (ids: $itemId) {
+    const query = `query {
+        items (ids: ${itemId}) {
           name
         }
       }`;
@@ -78,9 +81,9 @@ const fetchValuesOfBoard = async (token, itemId, columnId) => {
     const mondayClient = initMondayClient();
     mondayClient.setToken(token);
 
-    const query = `query($itemId: [Int], $columnId: [String]) {
-        items (ids: $itemId) {
-          column_values(ids:$columnId) {
+    const query = `query {
+        items (ids: ${itemId}) {
+          column_values(ids:"${columnId}") {
             text
           }
         }
@@ -101,8 +104,8 @@ const getTableSchema = async (token, boardID) => {
     const mondayClient = initMondayClient();
     mondayClient.setToken(token);
 
-    const query = `query($boardID: [Int]) {
-                        boards (ids:$boardID) {
+    const query = `query {
+                        boards (ids:${boardID}) {
                             id
                             columns {
                                 id
@@ -116,6 +119,7 @@ const getTableSchema = async (token, boardID) => {
     const variables = { boardID };
 
     const response = await mondayClient.api(query, { variables });
+    console.log(response)
     return response; 
   } catch (err) {
     console.error(err);
@@ -127,8 +131,8 @@ const changeColumnValue = async (token, boardId, itemId, columnId, value) => {
   try {
     const mondayClient = initMondayClient({ token });
 
-    const query = `mutation change_column_value($boardId: Int!, $itemId: Int!, $columnId: String!, $value: JSON!) {
-        change_column_value(board_id: $boardId, item_id: $itemId, column_id: $columnId, value: $value) {
+    const query = `mutation change_column_value {
+        change_column_value(board_id: ${boardId}, item_id: ${itemId}, column_id: "${columnId}", value: ${value}) {
           id
         }
       }
@@ -136,6 +140,7 @@ const changeColumnValue = async (token, boardId, itemId, columnId, value) => {
     const variables = { boardId, columnId, itemId, value };
     
     const response = await mondayClient.api(query, { variables });
+    console.log("hello");
     console.log(response);
     return response;
   } catch (err) {

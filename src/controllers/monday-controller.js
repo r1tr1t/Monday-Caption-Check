@@ -22,7 +22,6 @@ async function updateMondayDataTemp(videoId, ...args){
 
 async function getYouTubeChannelDetails(req, res) {  
     try {
-
       const { payload } = req.body;
       const { inputFields } = payload;
       const { boardId, itemId, columnId, sourceColumnId, captionTypeColumnId, channelNameColumnId, captionStatusColumnId} = inputFields;
@@ -107,12 +106,18 @@ async function checkCaption(req, res) {
         const status = await mondayService.getColumnValue(shortLivedToken, itemId, sourceColumnId);
 
         if(status === "Begin Check"){
-        return getMethodHandler(inputFields);
+            res.send(getMethodHandler(inputFields));
+        }
+        else{
+            res.json({
+                'statusCode': 200,
+                'body': JSON.stringify("Updated the board successfully")
+            })
         }
 
     } catch (err) {
         console.error(err);
-        return res.status(500).send({ message: 'internal server error' });
+        res.status(500).send({ message: 'internal server error' });
     }
 }
 
@@ -234,6 +239,7 @@ async function getMethodHandler(req) {
         const { boardId, columnId, itemId, sourceColumnId } = req;
 
         const response = await getBoardData(req, "captions", shortLivedToken);
+        console.log(response);
         const course_link = response.data.items[0].column_values[0].text
         let course_number = 0;
 
