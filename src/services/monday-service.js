@@ -5,25 +5,69 @@ const getAllRows = async (token, boardId) =>{
     const mondayClient = initMondayClient();
     mondayClient.setToken(token);
 
-    const query = `query {
-      boards(ids:${boardId}) {
-        items {
-          id
-          name
-          column_values {
-            title
-            text
-            id
-          }
-        }
-      }
-    }
-    `;
+    const query = `
+                  query {
+                      boards(ids:${boardId}) {
+                          name
+                          items_page {
+                              cursor
+                              items {
+                                  id
+                                  name
+                                  column_values {
+                                      id
+                                      column {
+                                          id
+                                          title
+                                      }
+                                      value
+                                      text
+                                  }
+                              }
+                          }
+                      }
+                  }
+              `;
 
     const variables = { boardId};
 
-    const response = await mondayClient.api(query, { variables });
-    return response.data.boards[0].items; 
+    var response = await mondayClient.api(query, { variables });
+
+    let cursor = response['data']['boards'][0]['items_page']['cursor'];
+    var all_items = response['data']['boards'][0]['items_page']['items'];
+
+    // Continue paginating until there are no more items
+    while (cursor) {
+        let query = `
+            query {
+                next_items_page(limit:500, cursor:"${cursor}") {
+                    cursor
+                    items {
+                        id
+                        name
+                        column_values {
+                            id
+                            column {
+                                id
+                                title
+                            }
+                            value
+                            text
+                        }
+                    }
+                }
+            }
+        `;
+
+        data = { 'query': query };
+        response = await mondayClient.api(query, { variables });
+
+        // Append items to the list
+        all_items = all_items.concat(response["data"]["next_items_page"]["items"]);
+        cursor = response["data"]["next_items_page"]['cursor'];
+    }
+
+    return all_items
   } catch (err) {
     console.error(err);
   }
@@ -47,8 +91,6 @@ const getColumnValue = async (token, itemId, columnId) => {
 
 
     const response = await mondayClient.api(query, { variables });
-    console.log(query);
-    console.log(response);
     return response.data.items[0].column_values[0].text; 
   } catch (err) {
     console.error(err);
@@ -119,7 +161,6 @@ const getTableSchema = async (token, boardID) => {
     const variables = { boardID };
 
     const response = await mondayClient.api(query, { variables });
-    console.log(response)
     return response; 
   } catch (err) {
     console.error(err);
@@ -140,8 +181,6 @@ const changeColumnValue = async (token, boardId, itemId, columnId, value) => {
     const variables = { boardId, columnId, itemId, value };
     
     const response = await mondayClient.api(query, { variables });
-    console.log("hello");
-    console.log(response);
     return response;
   } catch (err) {
     console.error(err);
@@ -169,11 +208,7 @@ async function updateMondayColumn(token, boardId, itemId, columnIds, newColumnVa
                                 }
                               }`;
 
-    // column_id: "${columnId}",
-    // Execute the update query
-    console.log(updateQuery);
     const response = await mondayClient.api(updateQuery);
-    console.log(response)
     console.log(`Column value updated successfully for item ${itemId}`);
   } catch (error) {
       console.error('Error updating column value:', error);
@@ -196,10 +231,7 @@ async function createOrUpdateSubitem(token, itemId, rowName, newColumnValues) {
                           }
                       }`;
       
-      console.log(query);
-      
       const response = await mondayClient.api(query);
-      console.log(response);
       return response; 
     } catch (err) {
       console.error(err);

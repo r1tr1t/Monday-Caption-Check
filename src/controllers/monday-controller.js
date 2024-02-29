@@ -11,9 +11,9 @@ async function updateMondayDataTemp(videoId, ...args){
     try {
         const channelName = await captionServices.getYouTubeChannelName(videoId);
         const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
+        const youTubeVideoStatus = await captionServices.getYouTubeVideoStatus(videoId);
         // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
-        console.log(args);
-        await mondayService.updateMondayColumn(...args, [captionStatus ? "True":"False", channelName, captionType]);
+        await mondayService.updateMondayColumn(...args, [captionStatus ? "True":"False", channelName, captionType, youTubeVideoStatus]);
     }
     catch(err){
       console.log(err)
@@ -24,39 +24,28 @@ async function getYouTubeChannelDetails(req, res) {
     try {
       const { payload } = req.body;
       const { inputFields } = payload;
-      const { boardId, itemId, columnId, sourceColumnId, captionTypeColumnId, channelNameColumnId, captionStatusColumnId} = inputFields;
-      console.log(payload);
+      const { boardId, itemId, columnId, sourceColumnId, captionTypeColumnId, channelNameColumnId, captionStatusColumnId, youtubeStatusColumnId} = inputFields;
   
       const videoId = await mondayService.getColumnValue(shortLivedToken, itemId, sourceColumnId);
       const checkStatus = await mondayService.getColumnValue(shortLivedToken, itemId, columnId);
 
-      console.log(videoId);
-      console.log(checkStatus);
 
       if(checkStatus === "Get Details"){
         const channelName = await captionServices.getYouTubeChannelName(videoId);
         const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
+        const youTubeVideoStatus = await captionServices.getYouTubeVideoStatus(videoId);
         // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
 
-        console.log(channelName + "----" + captionType + "------" + captionStatus + "-----")
-        await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);  
+        await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId, youtubeStatusColumnId], [captionStatus ? "True":"False", channelName, captionType, youTubeVideoStatus]);  
       }
       else if(checkStatus === "Get All Details"){
         var boardRows = await mondayService.getAllRows(shortLivedToken, boardId);
-        console.log(boardRows.length);
         const index = boardRows.findIndex(row => row.id == itemId);
-        console.log(index);
-        console.log(((index + 300) > boardRows.length ? index + (boardRows.length - index) : index + 300));
-        for(var idx = index; idx < ((index + 300) > boardRows.length ? index + (boardRows.length - index) : index + 300); idx++){
+        
+        for(var idx = index; idx < ((index + 100) > boardRows.length ? index + (boardRows.length - index) : index + 100); idx++){
             const videoId = boardRows[idx].column_values.find(item => item.id === sourceColumnId).text;
             const itemId = boardRows[idx].id;
-            console.log(videoId);
-            console.log(itemId);
-            // const channelName = await captionServices.getYouTubeChannelName(videoId);
-            // const [captionStatus, captionType] = await captionServices.getYoutubeCaptionDetails(videoId);
-            // // const captionStatus = await captionServices.checkYoutubeCaptionedOrNot(videoId);
-            // await mondayService.updateMondayColumn(shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId], [captionStatus ? "True":"False", channelName, captionType]);
-            updateMondayDataTemp(videoId, shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId])
+            updateMondayDataTemp(videoId, shortLivedToken, boardId, itemId, [captionStatusColumnId, channelNameColumnId, captionTypeColumnId, youtubeStatusColumnId]);
         }
       }
   
@@ -73,17 +62,12 @@ async function executeAction(req, res) {
         const { payload } = req.body;
         const { inputFields } = payload;
         const { boardId, itemId, sourceColumnId, targetColumnId, transformationType } = inputFields;
-        console.log(payload);
 
         const categoryId = await mondayService.getColumnValue(shortLivedToken, itemId, sourceColumnId);
         const entryId = await mondayService.getRowName(shortLivedToken, itemId);
 
-        console.log(entryId);
-        console.log(categoryId);
-
         if(categoryId !== null){
             const response = await captionServices.addCategories(entryId, categoryId);
-            console.log(response);
         }
 
         return res.status(200).send({});
@@ -97,9 +81,6 @@ async function executeAction(req, res) {
 async function checkCaption(req, res) {
     try {
         const { payload } = req.body;
-        console.log("hello");
-        console.log(payload);
-        console.log(shortLivedToken);
         const { inputFields } = payload;
         const { boardId, columnId, itemId, sourceColumnId } = inputFields;
 
@@ -135,7 +116,7 @@ async function getBoardData(req, method) {
 
         const schemaResponse =  await mondayService.getTableSchema(shortLivedToken, boardId);
         const tableSchema = schemaResponse.data.boards[0].columns;
-        console.log(tableSchema)
+
         if (method !== "categories") {
             for (const schema of tableSchema) {
                 switch (schema.title) {
@@ -239,7 +220,6 @@ async function getMethodHandler(req) {
         const { boardId, columnId, itemId, sourceColumnId } = req;
 
         const response = await getBoardData(req, "captions", shortLivedToken);
-        console.log(response);
         const course_link = response.data.items[0].column_values[0].text
         let course_number = 0;
 
@@ -254,7 +234,6 @@ async function getMethodHandler(req) {
         }
 
         const result = await captionServices.getCaptionedVideos(course_number);
-        console.log(result);
 
         let total_kaltura_videos = 0;
 
