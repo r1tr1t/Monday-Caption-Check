@@ -3,9 +3,10 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "start": "npm run stop && npm run server",
+    "dev": "npm run stop && npm run server",
     "server": "nodemon ./src/app.js",
-    "stop": "kill-port 8302"
+    "stop": "kill-port 8302",
+    "start": "node ./src/app.js"
   },
   "nodemonConfig": {
     "watch": [
