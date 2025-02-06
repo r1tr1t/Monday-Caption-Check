@@ -793,6 +793,7 @@ async function getYouTubeVideoStatus(videoId) {
   while(retry) {
     try {
       const youtubeAPIKey = await checkQuotaExceeded(videoId);
+      if (!youtubeAPIKey) { return "Failed" }
   
       console.log("---- Started getting YouTube video status ----" + youtubeAPIKey);
   
@@ -901,7 +902,7 @@ async function getYoutubeCaptionDetails(videoId) {
     return [captionedStatus, captionType];
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
-    return [false, 'No Caption'];
+    return [null, 'An Error Occurred'];
   }
 }
 
