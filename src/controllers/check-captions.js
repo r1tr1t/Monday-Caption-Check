@@ -789,39 +789,45 @@ async function getYouTubeChannelName(videoId) {
 
 
 async function getYouTubeVideoStatus(videoId) {
-  try {
-
-    const youtubeAPIKey = await checkQuotaExceeded(videoId);
-
-    console.log("---- Started getting YouTube video status ----" + youtubeAPIKey);
-
-    var youtube = google.youtube({
-      version: 'v3',
-      auth: youtubeAPIKey,
-    });
-
-    // Get video details
-    const videoResponse = await youtube.videos.list({
-      part: 'status',
-      id: videoId,
-    });
-
-    const video = videoResponse.data.items;
-
-    if (video.length > 0) {
-      // Get channel details using the channelId from the video
-      console.log("---- Finished getting YouTube video status ----");
-      var status = video[0].status.privacyStatus;
-      status = status.charAt(0).toUpperCase() + status.slice(1)
+  let retry = 5;
+  while(retry) {
+    try {
+      const youtubeAPIKey = await checkQuotaExceeded(videoId);
   
-      return status;
-    } else {
-      return "Broken";
+      console.log("---- Started getting YouTube video status ----" + youtubeAPIKey);
+  
+      var youtube = google.youtube({
+        version: 'v3',
+        auth: youtubeAPIKey,
+      });
+  
+      // Get video details
+      const videoResponse = await youtube.videos.list({
+        part: 'status',
+        id: videoId,
+      });
+  
+      const video = videoResponse.data.items;
+  
+      if (video.length > 0) {
+        // Get channel details using the channelId from the video
+        console.log("---- Finished getting YouTube video status ----");
+        var status = video[0].status.privacyStatus;
+        status = status.charAt(0).toUpperCase() + status.slice(1)
+    
+        return status;
+      } else {
+        console.error('Returning Broken');
+        return "Broken";
+      }
+    } catch (error) {
+      console.error(`An error occurred: ${error.message}`);
+      retry--;
+      console.error(`Retries remaining: ${retry}`);
     }
-  } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
-    return "Broken";
   }
+  console.error('Failed after 5 retries, returning Failed');
+  return "Failed";
 }
 
 
